@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class Player : MonoBehaviour
 {
 
-    // Movimentação
     public float speed;
     public float jumpforce;
     public static bool facingRight = true;
@@ -15,19 +14,16 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     private Transform groundCheck;
     private Animator anim;
+    public bool stopPlayer = false;
 
-
-    // Ataque
     private bool ataque;
     public float velocidadebala;
     //public GameObject tiro;
    // public Transform arma;
     public float tps = 0.1f;
-    public float tempo;
     public static bool takeDamage = false;
 
 
-    // Vida
     public static int vidas = 10;
     public bool playerAlive = true;
     public Image damageImage;
@@ -35,12 +31,12 @@ public class Player : MonoBehaviour
     bool damaged;
     public float flashspeed = 0.2f;
 
-    public static float tempoTotal;
+    
+    public GameObject dialog;
 
 
     void Start()
     {
-
         facingRight = true;
         rb = gameObject.GetComponent<Rigidbody2D>();
         groundCheck = gameObject.transform.Find("GroundCheck");
@@ -57,11 +53,7 @@ public class Player : MonoBehaviour
     void Update()
     {
 
-
-        tempoTotal += Time.deltaTime;
-
         noChao = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
-
         /*
         // Ataque
         if (Input.GetKeyDown(KeyCode.C) && tempo > 1 / tps)
@@ -96,18 +88,28 @@ public class Player : MonoBehaviour
     void FixedUpdate()
     {
         // Movimentação
-        float v = Input.GetAxisRaw("Vertical");
+        if(stopPlayer == false && playerAlive == true)
+        {
+            float v = Input.GetAxisRaw("Vertical");
 
-        float h = Input.GetAxisRaw("Horizontal");
+            float h = Input.GetAxisRaw("Horizontal");
 
-        //anim.SetFloat("Velocidade", Mathf.Abs(h));
+            rb.velocity = new Vector2(h * speed, rb.velocity.y);
 
-
-        rb.velocity = new Vector2(h * speed, rb.velocity.y);
-
+            // Flipar
+            if (h > 0 && !facingRight)
+            {
+                Flip();
+            }
+            else if (h < 0 && facingRight)
+            {
+                Flip();
+            }
+        }
+    //anim.SetFloat("Velocidade", Mathf.Abs(h));
 
         // Pulo
-        if (Input.GetKey(KeyCode.UpArrow) && noChao && playerAlive == true)
+        if (Input.GetKey(KeyCode.UpArrow) && noChao && playerAlive == true && stopPlayer == false)
         {
             jump = true;
         }
@@ -121,15 +123,7 @@ public class Player : MonoBehaviour
         // Agachar
 
 
-        // Flipar
-        if (h > 0 && !facingRight)
-        {
-            Flip();
-        }
-        else if (h < 0 && facingRight)
-        {
-            Flip();
-        }
+        
 
         // Vidas
         if (vidas <= 0)
@@ -147,9 +141,13 @@ public class Player : MonoBehaviour
         transform.localScale = theScale;
     }
 
-    void OnTriggerStay2D(Collider2D collider)
+    void OnTriggerEnter2D(Collider2D collider)
     {
-
+        if (collider.gameObject.CompareTag("Dialog"))
+        {
+            stopPlayer = true;
+            dialog.gameObject.SetActive(true);
+        }
     }
 
 

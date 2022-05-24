@@ -8,7 +8,7 @@ public class GameMaster : MonoBehaviour
     public GameObject Player;
     public GameObject startTextObject;
     public GameObject startText;
-    private float textSpeed = 30;
+    private float textSpeed = 70;
     public float time;
     // Start is called before the first frame update
     void Start()
