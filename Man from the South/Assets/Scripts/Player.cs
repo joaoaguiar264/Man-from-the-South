@@ -9,85 +9,92 @@ public class Player : MonoBehaviour
     public float speed;
     public float jumpforce;
     public static bool facingRight = true;
-    public bool noChao = false;
+    public bool isGrounded = false;
     public bool jump;
     private Rigidbody2D rb;
     private Transform groundCheck;
     private Animator anim;
-    public bool stopPlayer = false;
+    public static bool stopPlayer = false;
 
-    private bool ataque;
-    public float velocidadebala;
-    //public GameObject tiro;
-   // public Transform arma;
+    public GameObject projectile;
+    public Transform firePoint;
+    public float time;
     public float tps = 0.1f;
+
+
     public static bool takeDamage = false;
-
-
-    public static int vidas = 10;
+    public static int hp = 10;
+    public static bool alreadyDead = false;
     public bool playerAlive = true;
     public Image damageImage;
     public Color flashColor = new Color(1f, 0f, 0f, 0.1f);
-    bool damaged;
     public float flashspeed = 0.2f;
-
-    
-    public GameObject dialog;
 
 
     void Start()
     {
+        hp = 10;
+        alreadyDead = false;
+        stopPlayer = false;
         facingRight = true;
         rb = gameObject.GetComponent<Rigidbody2D>();
         groundCheck = gameObject.transform.Find("GroundCheck");
         anim = gameObject.GetComponent<Animator>();
     }
 
-    /*
-    void atirar()
+    
+    void Attack()
     {
-        tempo = 0;
-        Instantiate(tiro, arma.position, arma.rotation);
+        time = 0;
+        Instantiate(projectile, firePoint.position, projectile.transform.rotation);
     }
-    */
+    
     void Update()
     {
+        time += Time.deltaTime;
 
-        noChao = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
-        /*
-        // Ataque
-        if (Input.GetKeyDown(KeyCode.C) && tempo > 1 / tps)
+        isGrounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
+        
+
+        // Attack
+        if (Input.GetKeyDown(KeyCode.C) && time > 1 / tps && GameMaster.bossFightBool == true && alreadyDead == false && isGrounded == true)
         {
-            Invoke("reativar", 0.1f);
-            anim.SetTrigger("Atacando");
-            Invoke("atirar", 0);
+            anim.SetTrigger("Attack");
+            Invoke("Attack", 0);
 
         }
-        */
-        // Damage
-        if (damaged)
+
+        if (hp <= 0)
         {
+            playerAlive = false;
+        }
+
+        if (takeDamage == true && alreadyDead == false)
+        {
+            hp = hp -1;
+            anim.SetTrigger("Damaged");
             damageImage.color = flashColor;
+            takeDamage = false;
         }
         else
         {
             damageImage.color = Color.Lerp(damageImage.color, Color.clear, flashspeed * Time.deltaTime);
         }
-        damaged = false;
 
-        if (takeDamage == true)
+
+        if (playerAlive == false && alreadyDead == false)
         {
-            vidas--;
-            damaged = true;
-            takeDamage = false;
-          //GameMaster.AudioSrcSFX.PlayOneShot(GameMaster.dano);
+            anim.SetTrigger("isDead");
+            alreadyDead = true;
         }
-
+        else
+        {
+        }
     }
 
     void FixedUpdate()
     {
-        // Movimentação
+
         if(stopPlayer == false && playerAlive == true)
         {
             float v = Input.GetAxisRaw("Vertical");
@@ -96,7 +103,8 @@ public class Player : MonoBehaviour
 
             rb.velocity = new Vector2(h * speed, rb.velocity.y);
 
-            // Flipar
+             anim.SetFloat("Speed", Mathf.Abs(h));
+
             if (h > 0 && !facingRight)
             {
                 Flip();
@@ -106,10 +114,13 @@ public class Player : MonoBehaviour
                 Flip();
             }
         }
-    //anim.SetFloat("Velocidade", Mathf.Abs(h));
-
-        // Pulo
-        if (Input.GetKey(KeyCode.UpArrow) && noChao && playerAlive == true && stopPlayer == false)
+        else
+        {
+            anim.SetFloat("Speed", 0);
+        }
+        
+        
+        if (Input.GetKey(KeyCode.UpArrow) && isGrounded && playerAlive == true && stopPlayer == false && GameMaster.bossFightBool == true)
         {
             jump = true;
         }
@@ -119,17 +130,7 @@ public class Player : MonoBehaviour
             rb.AddForce(new Vector2(0, jumpforce));
             jump = false;
         }
-
-        // Agachar
-
-
         
-
-        // Vidas
-        if (vidas <= 0)
-        {
-            playerAlive = false;
-        }
     }
 
     void Flip()
@@ -146,7 +147,19 @@ public class Player : MonoBehaviour
         if (collider.gameObject.CompareTag("Dialog"))
         {
             stopPlayer = true;
-            dialog.gameObject.SetActive(true);
+            GameMaster.dialogOn = true;
+        }
+
+        if (collider.gameObject.CompareTag("Key"))
+        {
+            Destroy(collider.gameObject);
+            GameMaster.screenText = true;
+            GameMaster.win2 = true;
+        }
+
+        if (collider.gameObject.CompareTag("Car"))
+        {
+
         }
     }
 

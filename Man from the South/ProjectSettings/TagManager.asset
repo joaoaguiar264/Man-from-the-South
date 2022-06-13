@@ -7,6 +7,13 @@ TagManager:
   - Ground
   - GroundCheck
   - Dialog
+  - JumpSpace
+  - Enemy
+  - Border
+  - Stop1
+  - Stop2
+  - Key
+  - Car
   layers:
   - Default
   - TransparentFX
